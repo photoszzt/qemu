@@ -227,27 +227,30 @@ fail:
  * if the shm file is in a hugetlbfs that cannot be truncated to the
  * shm_size value. */
 static int
-ivshmem_server_ftruncate(int fd, unsigned shmsize)
+ivshmem_server_ftruncate(int fd, uint64_t shmsize)
 {
-    int ret;
     struct stat mapstat;
+
+    printf("input shmsize is %lx\n", shmsize);
 
     /* align shmsize to next power of 2 */
     shmsize = pow2ceil(shmsize);
+    printf("aligned shmsize is %lx\n", shmsize);
 
     if (fstat(fd, &mapstat) != -1 && mapstat.st_size == shmsize) {
         return 0;
     }
+    return ftruncate(fd, shmsize);
 
-    while (shmsize <= IVSHMEM_SERVER_MAX_HUGEPAGE_SIZE) {
-        ret = ftruncate(fd, shmsize);
-        if (ret == 0) {
-            return ret;
-        }
-        shmsize *= 2;
-    }
+    // while (shmsize <= IVSHMEM_SERVER_MAX_HUGEPAGE_SIZE) {
+    //     ret = ftruncate(fd, shmsize);
+    //     if (ret == 0) {
+    //         return ret;
+    //     }
+    //     shmsize *= 2;
+    // }
 
-    return -1;
+    // return -1;
 }
 
 /* Init a new ivshmem server */
